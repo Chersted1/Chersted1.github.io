@@ -1,10 +1,198 @@
 <?xml version="1.0" encoding="utf-8"?>
 <search>
   <entry>
-    <title>chenge-first-blog</title>
-    <url>/2026/04/21/chenge-first-blog/</url>
-    <content><![CDATA[<p>111</p>
-<span id="more"></span>
+    <title>SQL注入详解</title>
+    <url>/2026/04/22/sql%E6%B3%A8%E5%85%A5/</url>
+    <content><![CDATA[<h2 id="1-概念、"><a href="#1-概念、" class="headerlink" title="1.概念、"></a>1.概念、</h2><p>什么是SQL？结构化查询语言（Structured Query Language，缩写：SQL），一种数据库查询语言。</p>
+<p>而<strong>SQL注入</strong>（SQL Injection）是一种常见的Web安全漏洞，形成的主要原因是web应用程序在接收相关数据参数时未做好过滤，将其直接带入到数据库中查询，导致攻击者可以拼接执行构造的SQL语句。</p>
+<h2 id="2-漏洞原理"><a href="#2-漏洞原理" class="headerlink" title="2.漏洞原理"></a>2.漏洞原理</h2><p>SQL 注入的工作原理：</p>
+<ol>
+<li><p>输入验证不足：当Web应用程序没有正确验证用户输入时，攻击者可以在输入字段中插入SQL代码。</p>
+</li>
+<li><p>拼接SQL语句：应用程序后端通常将用户输入与SQL查询拼接在一起，形成完整的数据库查询语句。</p>
+</li>
+<li><p>执行恶意SQL：如果应用程序没有对输入进行适当的清理或转义，恶意SQL代码将被数据库服务器执行。</p>
+</li>
+<li><p>数据泄露或破坏：攻击者可以利用SQL注入来查询、修改或删除数据库中的数据，或者执行数据库管理系统的系统命令。</p>
+</li>
+</ol>
+<p>例如</p>
+<p>当用户登录网站时，通常会输入用户名和密码。</p>
+<p>以下是一段正常的 SQL 查询代码：<br><code>SELECT * FROM users WHERE username = &#39;user1&#39; AND password = &#39;password1&#39;;</code></p>
+<p>如果攻击者输入：</p>
+<p>用户名： <code>admin&#39; --</code><br>密码： <code>anything</code></p>
+<p>SQL 查询变成：<br><code>SELECT * FROM users WHERE username = &#39;admin&#39; --&#39; AND password = &#39;anything&#39;;</code><br>其中 – 是 SQL 的注释符号，忽略了密码条件，直接绕过了身份验证。</p>
+<p>总结来说，<strong>注入产生的原因是后台服务器在接收相关参数时未做好过滤直接带入到数据库中查询，导致可以拼接执行构造的SQL语句</strong></p>
+<h2 id="3-漏洞类型"><a href="#3-漏洞类型" class="headerlink" title="3.漏洞类型"></a>3.漏洞类型</h2><p>SQL注入漏洞类型有多种分类标准</p>
+<h4 id="3-1按注入点参数类型分类"><a href="#3-1按注入点参数类型分类" class="headerlink" title="3.1按注入点参数类型分类"></a>3.1按注入点参数类型分类</h4><ol>
+<li><p>数字型注入（Integer-based）<br> 参数为纯数字，无引号包裹，例如：?id&#x3D;1<br> 攻击示例：?id&#x3D;1 AND 1&#x3D;1</p>
+</li>
+<li><p>字符型注入（String-based）<br> 参数被单引号或双引号包裹，例如：?name&#x3D;’admin’<br> 攻击需先闭合引号：?name&#x3D;’ OR ‘1’&#x3D;’1</p>
+</li>
+<li><p>搜索型注入（Search-based）<br> 常见于模糊查询（如 LIKE），使用 % 或 _ 通配符<br> 示例：?keyword&#x3D;admin%’–</p>
+</li>
+</ol>
+<h4 id="3-2按回显方式-反馈信息分类"><a href="#3-2按回显方式-反馈信息分类" class="headerlink" title="3.2按回显方式&#x2F;反馈信息分类"></a>3.2按<strong>回显方式&#x2F;反馈信息</strong>分类</h4><ol>
+<li><p>显式注入（Union-based &#x2F; Error-based）<br> 数据库错误信息或查询结果直接返回到页面<br> 可利用 UNION SELECT 获取其他表数据</p>
+</li>
+<li><p>盲注（Blind SQL Injection）<br> 页面无直接回显，需通过逻辑判断推断数据：</p>
+</li>
+<li><p>布尔盲注（Boolean-based）：根据页面“真&#x2F;假”响应差异判断</p>
+</li>
+<li><p>时间盲注（Time-based）：通过 SLEEP() 等函数使数据库延迟响应，判断条件真假</p>
+</li>
+</ol>
+<h4 id="3-3按注入技术-攻击手法分类"><a href="#3-3按注入技术-攻击手法分类" class="headerlink" title="3.3按注入技术&#x2F;攻击手法分类"></a>3.3按<strong>注入技术&#x2F;攻击手法</strong>分类</h4><ol>
+<li><p><strong>联合查询注入（Union Query Injection）</strong><br> 利用 <code>UNION</code> 合并查询结果，获取额外数据</p>
+</li>
+<li><p><strong>报错注入（Error-based Injection）</strong><br> 利用数据库报错函数（如 MySQL 的 <code>extractvalue()</code>、<code>updatexml()</code>）将数据带出</p>
+</li>
+<li><p><strong>堆叠查询注入（Stacked Queries）</strong><br> 使用分号 <code>;</code> 执行多条 SQL 语句（如：<code>SELECT ...; DROP TABLE users;</code>）<br> ⚠️ 并非所有数据库都支持（如 PHP+MySQL 支持，但多数 ORM 不允许）</p>
+</li>
+<li><p><strong>二次注入（Second-order Injection）</strong><br> 恶意 SQL 被存储到数据库中，后续在另一功能点被调用时触发</p>
+</li>
+<li><p><strong>宽字节注入（Wide-byte Injection）</strong><br> 利用编码转换（如 GBK）绕过单引号转义，常见于未正确设置字符集的系统</p>
+</li>
+<li><p><strong>HTTP 头部注入</strong><br> 注入点位于 <code>User-Agent</code>、<code>Referer</code>、<code>Cookie</code> 等 HTTP 请求头字段</p>
+</li>
+</ol>
+<h4 id="3-4按提交方式分类"><a href="#3-4按提交方式分类" class="headerlink" title="3.4按提交方式分类"></a>3.4按<strong>提交方式</strong>分类</h4><ol>
+<li><p>GET 注入：参数在 URL 中（如 ?id&#x3D;1）</p>
+</li>
+<li><p>POST 注入：参数在请求体中（如登录表单）</p>
+</li>
+<li><p>Cookie 注入：通过修改 Cookie 值注入</p>
+</li>
+<li><p>User-Agent &#x2F; Referer 注入：从 HTTP 头部字段注入</p>
+</li>
+</ol>
+<h2 id="4-漏洞挖掘"><a href="#4-漏洞挖掘" class="headerlink" title="4.漏洞挖掘"></a>4.漏洞挖掘</h2><p>当你看见以下特征时，说明这里很有可能存在SQL注入漏洞：</p>
+<h4 id="4-1URL中包含参数-尤其时数字或字符串"><a href="#4-1URL中包含参数-尤其时数字或字符串" class="headerlink" title="4.1URL中包含参数(尤其时数字或字符串)"></a>4.1URL中包含参数(尤其时数字或字符串)</h4><pre><code>例如
+`https://example.com/product?id=123` 
+`https://example.com/search?keyword=admin`
+</code></pre>
+<h4 id="4-2提交表单-登录、搜索等"><a href="#4-2提交表单-登录、搜索等" class="headerlink" title="4.2提交表单(登录、搜索等)"></a>4.2提交表单(登录、搜索等)</h4><pre><code>登录框、搜素框、用户资料修改、评论等
+</code></pre>
+<h4 id="4-3返回错误信息"><a href="#4-3返回错误信息" class="headerlink" title="4.3返回错误信息"></a>4.3返回错误信息</h4><pre><code>例如
+mysql的
+`ERRORR 1064(42000:) You have an error in your SQL syntax`
+sql server的
+`Unclosed quotation mark after the character string...`
+</code></pre>
+<h4 id="4-4响应时间"><a href="#4-4响应时间" class="headerlink" title="4.4响应时间"></a>4.4响应时间</h4><pre><code>输入`&#39; OR SLEEP(10)--`
+如果页面明显卡顿10秒后才返回，表面可能支持时间盲注
+</code></pre>
+<h2 id="5-基础注入类型"><a href="#5-基础注入类型" class="headerlink" title="5.基础注入类型"></a>5.基础注入类型</h2><p>如何判断注入类型：<br>其核心是——闭合构造</p>
+<p>一条常见的查询命令<code>SELECT username,password FROM users WHERE id = ?</code><br>这里的问号可以有多种的闭合方式, <code>$id</code>, <code>&#39;$id&#39;</code>, <code>&quot;$id&quot;</code>, <code>($id)</code></p>
+<p>那么什么是构造闭合呢？</p>
+<p>已知我们可控的输入点是 ？也就是 $id , 当我们的输入与开发者后台设置的语句的 <code>&#39;</code> <code>&quot;</code> <code>(</code> 配对<br>例如后台为:<br><code>SELECT username,password FROM users WHERE id = &quot;$id&quot;</code></p>
+<p>那么我们使传入的 $id &#x3D; ‘1”‘, 那么后台执行则为<br><code>SELECT username,password FROM users WHERE id = &quot;1&quot; &quot;</code></p>
+<p>在这里我们对 1 完成了闭合构造，但是我们闭合了前序导致后续的 <code>&quot;</code> 没有双引号配对，多出来的这个双引号则会导致报错</p>
+<p>基础注入类型分为数字型注入和字符型注入<br>数字型注入特征：参数无引号包裹<br>字符型注入特征：</p>
+<p>下面列举一些判断方式：</p>
+<p><strong>通过是否报错</strong></p>
+<table>
+<thead>
+<tr>
+<th>后台实际输入</th>
+<th>执行语句</th>
+<th>是否报错 以及 相关解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>&quot;1&#39;&quot;</code></td>
+<td><code>SELECT username,password FROM users WHERE id = &quot;1&#39;&quot;</code></td>
+<td><code>&quot;&quot;</code> 中为可以包含 <code>&#39;</code> ，而 <code>1&#39;</code> 是一个合法的字符串 , 在查询时会先被强制类型转换为数字，<strong>不会报错</strong></td>
+</tr>
+<tr>
+<td><code>1&#39;</code></td>
+<td><code>SELECT username,password FROM users WHERE id = 1&#39;</code></td>
+<td>这里的 <code>&#39;</code> 就没有闭合，<strong>会报错</strong>。</td>
+</tr>
+<tr>
+<td><code>&#39;1&#39;&#39;</code></td>
+<td><code>SELECT username,password FROM users WHERE id = &#39;1&#39;&#39;</code></td>
+<td>这里的 <code>&#39;</code>与前序的<code>&#39;</code> 闭合了但这样就留下了后序单着的 <code>&#39;</code>，<strong>会报错</strong>。</td>
+</tr>
+<tr>
+<td><strong>通过报错信息</strong></td>
+<td></td>
+<td></td>
+</tr>
+</tbody></table>
+<table>
+<thead>
+<tr>
+<th>输入</th>
+<th>后台执行</th>
+<th>后台报错</th>
+<th>解释</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>1&quot;</code></td>
+<td><code>id = &quot;1&quot;&quot;</code></td>
+<td><code>near &#39;&quot;1&quot;&quot;&#39; at line 1</code></td>
+<td>去掉外层 SQL 的单引号，留下<code>&quot;1&quot;&quot;</code>，除去自己的输入 <code>1&quot;</code>可知类型为 <strong>双引号</strong> 的 <strong>字符型注入</strong></td>
+</tr>
+<tr>
+<td><code>1&#39;</code></td>
+<td><code>id = &#39;1&#39;&#39;</code></td>
+<td><code>near &#39;&#39;1&#39;&#39;&#39; at line 1</code></td>
+<td>同理，留下<code>&#39;1&#39;&#39;</code>除去自己的输入 <code>1&#39;</code>可知类型为 <strong>单引号</strong> 的 <strong>字符型注入</strong></td>
+</tr>
+<tr>
+<td><code>&#39;1</code></td>
+<td><code>id = &#39;&#39;1&#39;</code></td>
+<td><code>near &#39;1&#39;&#39; at line 1</code></td>
+<td>对于后台 SQL，由于 <code>id = &#39;&#39;</code>已经合法闭合，所以后面 <code>1&#39;</code>反而为多出的语句，所以报错点在 <code>1&#39;</code></td>
+</tr>
+</tbody></table>
+<h2 id="6-盲注"><a href="#6-盲注" class="headerlink" title="6.盲注"></a>6.盲注</h2><p>盲注是指攻击者不能直接获取数据库中的信息，需要通过一些技巧来判断或推断出数据库中的数据。</p>
+<h3 id="6-1布尔盲注"><a href="#6-1布尔盲注" class="headerlink" title="6.1布尔盲注"></a>6.1布尔盲注</h3><pre><code>以下面的语句为例
+$sql = &quot;SELECT username,password FROM users WHERE id = &quot;.$_GET[&quot;id&quot;];
+
+对于上述语句，如果 id 的传参如下：
+id = 1 AND 1=1`
+
+那么语句执行为：
+`SELECT username,password FROM users WHERE id = 1 AND 1=1;`
+
+这里会要求两个条件为真，一是有 `id=1` 这个值，二是 `1=1`，这两个条件当然是满足的，特别是后     面的这个条件。
+
+那如果我让 AND 后面的条件为 `1 = 2`：
+`SELECT username,password FROM users WHERE id = 1 AND &#39;1&#39;=&#39;2&#39;;` 
+
+结果返回为空，因为 AND 后面的条件不满足。
+
+那么利用这个 AND 符号我们可以尝试下面的一些方式来获取信息，如：
+使用 length(）获取长度信息
+利用 `SUBSTR()` 函数，逐步截取数据库中的某个数据
+利用`MID()` 函数也是用于截取字符串的函数
+</code></pre>
+<h4 id="6-2时间盲注"><a href="#6-2时间盲注" class="headerlink" title="6.2时间盲注"></a>6.2时间盲注</h4><pre><code>利用 SQL 语句的执行时间来判断 SQL 语句的真假，从而逐步推断出数据库中的数据。
+
+`SLEEP()` 函数是时间盲注的核心，其语法为 `SLEEP(seconds)`
+当语句被执行时，程序将会暂停指定秒数
+
+`IF()` 函数是一种条件判断函数，它用于判断指定条件是否成立，并根据判断结果返回不同的值.
+常 `IF` 和 `SLEEP` 两函数会一起使用
+
+SELECT * FROM users WHERE username=&#39;admin&#39; AND IF(SLEEP(5),1,0)`
+
+如果数据库中不存在用户名为 `admin` 的用户，那么该语句将会立即返回结束；否则，程序将会暂停 5     秒钟后再返回结果。
+
+由此我们可以获得数据
+</code></pre>
+<h2 id="7-实战推荐"><a href="#7-实战推荐" class="headerlink" title="7.实战推荐"></a>7.实战推荐</h2><p>pikachu、sqli-labs</p>
+<p>自己装的mysql与phpstudy冲突的可以用docker搭建</p>
 ]]></content>
+      <categories>
+        <category>技术教程</category>
+      </categories>
+      <tags>
+        <tag>网络安全</tag>
+        <tag>SQL注入</tag>
+      </tags>
   </entry>
 </search>
