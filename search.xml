@@ -195,4 +195,125 @@ SELECT * FROM users WHERE username=&#39;admin&#39; AND IF(SLEEP(5),1,0)`
         <tag>SQL注入</tag>
       </tags>
   </entry>
+  <entry>
+    <title>reverse工程</title>
+    <url>/2026/05/11/reverse/</url>
+    <content><![CDATA[<h1 id="1-概念"><a href="#1-概念" class="headerlink" title="1.概念"></a>1.概念</h1><p>1.1什么是逆向工程<br>    <strong>逆向工程</strong>（Reverse Engineering）是指在<strong>没有源代码</strong>的情况下，通过对编译后的程序（如 <code>.exe</code>、<code>.dll</code>、<code>.apk</code>、<code>.so</code> 等二进制文件）进行分析，来理解其内部逻辑、算法、数据结构、通信协议或安全机制的技术过程。</p>
+<p>1.2逆向工程有什么用<br>    -安全研究与漏洞挖掘，通过逆向程序找出漏洞，避免安全隐患<br>    -兼容性开发，为没有公开接口的软硬件开发驱动或插件，实现与闭源系统的数据互通<br>    -软件质量评估与审计，对商业软件进行安全审计，检查是否存在后门、隐私泄露或弱加密</p>
+<h1 id="2-基础知识"><a href="#2-基础知识" class="headerlink" title="2.基础知识"></a>2.基础知识</h1><p>2.1语言基础<br>    - C&#x2F;C++ 目前绝大多数逆向目标是 C&#x2F;C++ 编写的，理解源码 → 汇编的映射关系至关重要。其中理解指针、结构体、位运算、编译后如何对应到汇编（例如数组在内存中如何排布）十分重要<br>    - 汇编语言，逆向工程的核心。您需要至少熟悉一种体系结构的汇编，如 x86, x86-64 (AMD64), ARM。也应熟悉常用指令：<code>mov</code>, <code>push/pop</code>, <code>call/ret</code>, <code>jmp</code>, <code>cmp/test</code>, <code>lea</code>等<br>    - python，用于编写自动化脚本（如 IDA 插件、解密工具）十分好用。常用库：<code>pwntools</code>, <code>capstone</code>（反汇编引擎）, <code>keystone</code>（汇编引擎）</p>
+<h1 id="3-工具"><a href="#3-工具" class="headerlink" title="3.工具"></a>3.工具</h1><h4 id="3-1-IDA-Pro"><a href="#3-1-IDA-Pro" class="headerlink" title="3.1 IDA Pro"></a>3.1 <strong>IDA Pro</strong></h4><p><strong>用途</strong>：<strong>反汇编器 + 静态分析神器</strong>，是逆向工程师的“行业标准”。<br><strong>功能</strong>：<br>    -将二进制程序（如 <code>.exe</code>, <code>.dll</code>, <code>.so</code>）转换为<strong>汇编代码</strong>甚至<strong>类C伪代码</strong>（需配合Hex-Rays插件）。<br>    -支持多种架构（x86, x64, ARM, MIPS 等）和文件格式（PE, ELF, Mach-O 等）。<br>    -提供函数识别、交叉引用（XREF）、注释、图形化控制流图等强大功能。</p>
+<ul>
+<li><strong>特点</strong>：功能极强，但<strong>商业收费</strong>（学生可申请免费版）；也有免费替代品如 <strong>Ghidra</strong>。</li>
+</ul>
+<blockquote>
+<p>✅ 用于：静态分析恶意软件、漏洞挖掘、协议还原、CTF 逆向题。</p>
+</blockquote>
+<hr>
+<h4 id="3-2-x64dbg"><a href="#3-2-x64dbg" class="headerlink" title="3.2 x64dbg"></a>3.2 x64dbg</h4><p><strong>用途：一个开源、免费的 Windows 平台动态调试器，主要用于动态分析</strong>。<br><strong>特点：</strong><br>    支持 32 位（x32dbg）和 64 位程序调试。<br>    图形界面友好，插件丰富，社区活跃。<br>    可设置断点、查看寄存器&#x2F;内存、跟踪函数调用等。<br>    适用场景：调试加壳程序、分析运行时行为、破解验证逻辑等。</p>
+<h4 id="3-3-010-Editor"><a href="#3-3-010-Editor" class="headerlink" title="3.3 010 Editor"></a>3.3 <strong>010 Editor</strong></h4><p><strong>用途</strong>：<strong>高级十六进制编辑器 + 模板解析器</strong>。<br><strong>功能</strong>：<br>    - 以十六进制和 ASCII 形式查看&#x2F;编辑任意文件（包括磁盘、进程内存）<br>    - 内置 <strong>Binary Templates</strong>（模板）：可自动解析 PE、ZIP、BMP、ELF 等结构，像“看结构体”一样看二进制数据<br>    - 支持脚本（C-like 语法）自动化处理</p>
+<ul>
+<li><strong>优势</strong>：比普通十六进制编辑器更智能，适合分析文件格式</li>
+</ul>
+<h4 id="3-4-WinHex"><a href="#3-4-WinHex" class="headerlink" title="3.4 WinHex"></a>3.4 <strong>WinHex</strong></h4><p><strong>用途</strong>：<strong>老牌十六进制编辑器 + 数字取证工具</strong>。<br><strong>功能</strong>：<br>    - 编辑磁盘、分区、文件、内存。<br>    - 支持磁盘克隆、数据恢复、关键词搜索（支持正则）。<br>    - 常用于<strong>电子取证</strong>（如从硬盘中恢复删除文件）。</p>
+<h4 id="3-5-Apktool"><a href="#3-5-Apktool" class="headerlink" title="3.5 Apktool"></a>3.5 <strong>Apktool</strong></h4><p><strong>用途</strong>：<strong>Android APK 逆向工具</strong>。<br><strong>功能</strong>：<br>    - <strong>反编译 APK</strong>：提取 <code>AndroidManifest.xml</code>、资源文件（图片、布局）、<code>smali</code> 代码（Dalvik 字节码的汇编表示）。<br>    - <strong>回编译</strong>：修改后可重新打包成 APK（常用于汉化、去广告、重打包）。</p>
+<h1 id="4-如何分析"><a href="#4-如何分析" class="headerlink" title="4.如何分析"></a>4.如何分析</h1><h4 id="4-1-静态分析（Static-Analysis）"><a href="#4-1-静态分析（Static-Analysis）" class="headerlink" title="4.1 静态分析（Static Analysis）"></a>4.1 <strong>静态分析（Static Analysis）</strong></h4><p><strong>定义</strong>：不运行程序，直接分析其二进制代码。<br><strong>常用工具</strong>：<br>    - <strong>IDA Pro：反汇编 + 反编译（生成伪 C 代码）。<br>    - 010 Editor &#x2F; WinHex</strong>：查看&#x2F;编辑二进制结构，配合模板解析文件格式。<br> **关键：<br>    - 定位关键函数（如登录验证、加密算法）<br>    - 识别字符串、常量、API 调用</p>
+<h4 id="4-2-动态分析（Dynamic-Analysis）"><a href="#4-2-动态分析（Dynamic-Analysis）" class="headerlink" title="4.2 动态分析（Dynamic Analysis）"></a>4.2 <strong>动态分析（Dynamic Analysis）</strong></h4><p><strong>定义</strong>：在程序运行时观察其行为。<br><strong>常用工具</strong>：<br>    - **x64dbg：Windows 程序调试器。<br>关键：<br>    - 跟踪输入（如用户名、密码）在内存中的流向。<br>    - 绕过反调试、解密运行时加载的代码。<br>    - 验证静态分析的假设。</p>
+<h4 id="4-3算法还原与逻辑理解"><a href="#4-3算法还原与逻辑理解" class="headerlink" title="4.3算法还原与逻辑理解"></a>4.3<strong>算法还原与逻辑理解</strong></h4><ul>
+<li>结合动静态分析，还原核心算法（如加密、校验、签名）。</li>
+<li>使用 Python&#x2F;C 等语言<strong>重写关键逻辑</strong>，实现自动化（如模拟登录、生成合法请求）。</li>
+</ul>
+<h1 id="5-常见算法"><a href="#5-常见算法" class="headerlink" title="5.常见算法"></a>5.常见算法</h1><h3 id="1-编码类算法"><a href="#1-编码类算法" class="headerlink" title="1. 编码类算法"></a>1. <strong>编码类算法</strong></h3><ul>
+<li><p><strong>Base64</strong><br>  将3字节数据编码为4个ASCII字符，常用于传输或隐藏二进制数据。</p>
+<ul>
+<li>特征：使用字符集 <code>ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/</code></li>
+<li>变种：Base32、Base58、自定义字符表的Base64</li>
+</ul>
+</li>
+<li><p><strong>Hex 编码</strong><br>  将每个字节转换为两个十六进制字符。</p>
+</li>
+<li><p><strong>URL 编码 &#x2F; HTML 实体编码</strong><br>  用于Web场景中的参数转义。</p>
+</li>
+</ul>
+<hr>
+<h3 id="2-哈希算法（不可逆）"><a href="#2-哈希算法（不可逆）" class="headerlink" title="2. 哈希算法（不可逆）"></a>2. <strong>哈希算法（不可逆）</strong></h3><ul>
+<li><strong>MD5</strong><br>  输出128位（16字节）摘要，常用于校验或简单密码存储（已不安全）。</li>
+<li><strong>SHA 系列（SHA-1, SHA-256）</strong><br>  更安全的哈希算法，常用于数字签名、完整性校验。</li>
+<li><strong>SM3</strong>（国密算法）<br>  中国国家密码管理局发布的哈希算法，输出256位。</li>
+</ul>
+<hr>
+<h3 id="3-对称加密算法"><a href="#3-对称加密算法" class="headerlink" title="3. 对称加密算法"></a>3. <strong>对称加密算法</strong></h3><ul>
+<li><strong>AES（Advanced Encryption Standard）</strong><br>  最常用的现代分组加密算法，密钥长度通常为128&#x2F;192&#x2F;256位。</li>
+<li><strong>DES &#x2F; 3DES</strong><br>  较老的加密标准，安全性较低，但在旧系统中仍可见。</li>
+<li><strong>RC4</strong><br>  流加密算法，曾广泛用于SSL&#x2F;TLS，现因漏洞逐渐淘汰。</li>
+<li><strong>TEA &#x2F; XTEA &#x2F; XXTEA</strong><br>  轻量级分组加密算法，代码简短，在CTF中高频出现。</li>
+</ul>
+<hr>
+<h3 id="4-异或（XOR）与简单混淆"><a href="#4-异或（XOR）与简单混淆" class="headerlink" title="4. 异或（XOR）与简单混淆"></a>4. <strong>异或（XOR）与简单混淆</strong></h3><ul>
+<li><strong>单字节&#x2F;多字节 XOR</strong><br>  最基础的混淆手段，常用于壳（packer）或恶意软件中。</li>
+<li><strong>ROT13 &#x2F; Caesar Cipher</strong><br>  简单位移加密，多见于入门级题目。</li>
+</ul>
+<hr>
+<h3 id="5-自定义算法与混合逻辑"><a href="#5-自定义算法与混合逻辑" class="headerlink" title="5. 自定义算法与混合逻辑"></a>5. <strong>自定义算法与混合逻辑</strong></h3><ul>
+<li>多重嵌套：如 Base64 → RC4 → MD5 校验</li>
+<li>动态密钥生成：密钥由用户名、时间戳、硬件ID等动态生成</li>
+<li>控制流混淆：插入无用指令、跳转打乱逻辑，增加静态分析难度</li>
+</ul>
+<hr>
+<h3 id="6-反调试与反虚拟机技术（虽非算法，但常伴随出现）"><a href="#6-反调试与反虚拟机技术（虽非算法，但常伴随出现）" class="headerlink" title="6. 反调试与反虚拟机技术（虽非算法，但常伴随出现）"></a>6. <strong>反调试与反虚拟机技术（虽非算法，但常伴随出现）</strong></h3><ul>
+<li>检测调试器（IsDebuggerPresent、CheckRemoteDebuggerPresent）</li>
+<li>时间差检测（rdtsc 指令）</li>
+<li>虚拟机特征检测（注册表、设备名、CPUID）</li>
+</ul>
+]]></content>
+      <categories>
+        <category>基础知识</category>
+      </categories>
+      <tags>
+        <tag>网络安全</tag>
+        <tag>逆向工程</tag>
+      </tags>
+  </entry>
+  <entry>
+    <title></title>
+    <url>/2026/05/11/reverse%E5%B7%A5%E5%85%B7%E6%95%99%E7%A8%8B%E4%B9%8BIDA/IDA%E6%95%99%E7%A8%8B/</url>
+    <content><![CDATA[<h1 id="1-IDA-pro"><a href="#1-IDA-pro" class="headerlink" title="1.IDA pro"></a>1.IDA pro</h1><p>逆向工程中常用且好用的反汇编工具</p>
+<h3 id="1-1"><a href="#1-1" class="headerlink" title="1.1"></a>1.1</h3><p>打开ida，可以看见三个选项<br><img src="/Pasted%20image%2020260511193732-1.png" alt="alt"><br>New：<br>打开资源管理器选择一个程序进行反汇编，但由于ida支持文件拖拽，所以并不常用<br>Go:<br>最常用的选项，直接进入主界面<br><img src="/Pasted%20image%2020260511194223-1.png" alt="alt"><br>Previous：<br>展示你先前已反编译的文件选项</p>
+<h3 id="1-2"><a href="#1-2" class="headerlink" title="1.2"></a>1.2</h3><p>当你将一个文件托入窗口，会显示如下对话框<br><img src="/Pasted%20image%2020260511194518-1.png" alt="alt"><br>Load file：<br>文件路径，下面为文件类型选择，ida会自行判断。如果IDA不能识别的二进制代码，可选择“Binary file”方式加载。此时下方的Loading segment 和 Loading offset 就可以进行编辑。你可以手动填入加载段地址和相对偏移，此时ida不会自动分析代码，意味着用户可根据具体需求自行反汇编二进制代码<br>Processor Type：<br>可以指定在反汇编过程中使用的处理器模块。大多数情况下，ida会从可执行文件的头中读取到信息，会自行选择合适的处理器<br>kernel options：<br>配置特定反汇编分析选项，通常ida默认就是最优选项<br>processor options：选择适用于处理器模块的配置选项</p>
+<h3 id="1-3"><a href="#1-3" class="headerlink" title="1.3"></a>1.3</h3><p>一路点击ok可进入如下页面<br><img src="/%E6%97%A0%E6%A0%87%E9%A2%98-1.png" alt="alt"></p>
+<h5 id="数据视图："><a href="#数据视图：" class="headerlink" title="数据视图："></a>数据视图：</h5><p>反汇编窗口 IDA View-A：<br>最开始为 IDA View-A 反汇编窗口，该窗口有两种模式：文本模式和图形模式<br>使用快捷键“Tab”可将窗口从 IDA View-A 切换到 Pseudocode-A （伪代码），便于分析代码和算法。</p>
+<p>二进制数据查看器 Hex View-1：<br>默认每行显示 16 个字节 的十六进制值（如 <code>48 65 6C 6C 6F</code>） 对应的 ASCII字符（不可打印字符显示为 .</p>
+<p>结构窗口 Structures：<br>结构窗口提供用户查询已定义的结构体，同时IDA可识别出可执行文件包含的部分结构体数据，结构窗口可通过快捷键“+”、“-”展开和收缩结构体，IDA结构窗口支持用户自定义结构体。</p>
+<p>导入函数窗口 Imports：<br>IDA提供导入函数窗口，用于可在导入函数窗口中查看当前可执行文件导入哪些外部函数库及函数，通过导入函数窗口可获取到函数内存相对偏移地址、函数名、导入函数所属的库文件。</p>
+<p>导出函数窗口 Exports：<br>IDA的导出函数窗口提供可执行文件导出函数信息，通过导出函数窗口可获取到导出的函数名、函数对应的内存相对偏移地址。</p>
+<p>色彩指示器：<br>基于IDA默认设置介绍各种颜色在导航条的含义</p>
+<p>蓝色：表示常规的指令函数，绝大部分为用户编写的代码，上图中绝大部分数据属于蓝色数据。</p>
+<p>黑色：表示间隙部分内容，可执行文件中包含多个节段，相邻节段之间存在空隙，红色表示空隙部分。</p>
+<p>银白色：表示数据项部分内容，可执行文件中会包含大量数据，银白色表示数据项部分内容。</p>
+<p>粉色：表示外部导入符号，通常可执行文件会导入外部的库函数。</p>
+<p>暗黄色：表示IDA未识别的内容，需要用户根据需求自行分析。<br>可在“Options”下的“Colors”更改颜色<br><img src="/Pasted%20image%2020260511203145-1.png" alt="alt"><br>注：<br>“Options”下的“Colors”是专门用来自定义颜色的，ida所有需要用到颜色地方都可在这里更改</p>
+<h3 id="1-4"><a href="#1-4" class="headerlink" title="1.4"></a>1.4</h3><p>一些快捷键</p>
+<p>空格键：反汇编窗口切换文本跟图形</p>
+<p>Ctrl + F：关键词搜索(常用在函数窗口搜索主函数main)</p>
+<p>Esc：在反汇编窗口中使用为后退到上个操作的地址处</p>
+<p>Shift +F5：打开签名窗口</p>
+<p>shift+F12：自动分析出参考字符串</p>
+<p>ALT+T：搜索字符串(文本搜索)</p>
+<p>ALT+L：标记(Lable)</p>
+<p>ALT+M：设置标签(mark)</p>
+<p>CTRL+M：列举出当前已经添加的标签</p>
+<p>CTRL+S列举出二进制程序的段的开始地址、结束地址、权限等信息</p>
+<p>Tab&#x2F;F5：将一个函数逆向出来(生成c伪代码)</p>
+<p>G：跳转到指定地址</p>
+<p>A：将选择的信息转换成ASCII(转换成可读性跟强的字符串)</p>
+<p>X(ctrl+X)：交叉引用,类似于OD中的栈回溯操作</p>
+<p>N：对符号重命名</p>
+<p>：&amp;；(冒号&amp;分号)：光标 所在位置添加常规注释和可重复注释</p>
+<p>Y：设置变量类型</p>
+<p>H：转换16进制</p>
+<p>C：光标所在地址处的内容解析成代码</p>
+<p>D：光标所在地址处的内容解析成数据</p>
+<p>A：光标所在地址处的内容解析成ascll码字符串</p>
+<p>U：光标所在地址处的内容解析成未定义内容。</p>
+]]></content>
+  </entry>
 </search>
