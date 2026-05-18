@@ -275,11 +275,11 @@ SELECT * FROM users WHERE username=&#39;admin&#39; AND IF(SLEEP(5),1,0)`
   </entry>
   <entry>
     <title>reverse工具之IDA</title>
-    <url>/2026/05/11/reverse%E5%B7%A5%E5%85%B7%E4%B9%8BIDA/</url>
+    <url>/2026/05/11/IDA/</url>
     <content><![CDATA[<h1 id="1-IDA-pro"><a href="#1-IDA-pro" class="headerlink" title="1.IDA pro"></a>1.IDA pro</h1><p>逆向工程中常用且好用的反汇编工具</p>
-<h3 id="1-1"><a href="#1-1" class="headerlink" title="1.1"></a>1.1</h3><p>打开ida，可以看见三个选项<br><img src="/reverse%E5%B7%A5%E5%85%B7%E4%B9%8BIDA%5CPasted%20image%2020260511193732.png" alt="alt"><br>New：<br>打开资源管理器选择一个程序进行反汇编，但由于ida支持文件拖拽，所以并不常用<br>Go:<br>最常用的选项，直接进入主界面<br><img src="/Pasted%20image%2020260511194223-1.png" alt="alt"><br>Previous：<br>展示你先前已反编译的文件选项</p>
-<h3 id="1-2"><a href="#1-2" class="headerlink" title="1.2"></a>1.2</h3><p>当你将一个文件托入窗口，会显示如下对话框<br><img src="/Pasted%20image%2020260511194518-1.png" alt="alt"><br>Load file：<br>文件路径，下面为文件类型选择，ida会自行判断。如果IDA不能识别的二进制代码，可选择“Binary file”方式加载。此时下方的Loading segment 和 Loading offset 就可以进行编辑。你可以手动填入加载段地址和相对偏移，此时ida不会自动分析代码，意味着用户可根据具体需求自行反汇编二进制代码<br>Processor Type：<br>可以指定在反汇编过程中使用的处理器模块。大多数情况下，ida会从可执行文件的头中读取到信息，会自行选择合适的处理器<br>kernel options：<br>配置特定反汇编分析选项，通常ida默认就是最优选项<br>processor options：选择适用于处理器模块的配置选项</p>
-<h3 id="1-3"><a href="#1-3" class="headerlink" title="1.3"></a>1.3</h3><p>一路点击ok可进入如下页面<br><img src="/%E6%97%A0%E6%A0%87%E9%A2%98-1.png" alt="alt"></p>
+<h3 id="1-1"><a href="#1-1" class="headerlink" title="1.1"></a>1.1</h3><p>打开ida，可以看见三个选项<br><img src="/images/IDA1.jpg" alt="图片" title="IDA1"><br>New：<br>打开资源管理器选择一个程序进行反汇编，但由于ida支持文件拖拽，所以并不常用<br>Go:<br>最常用的选项，直接进入主界面<br><img src="/images/IDA2.jpg" alt="图片" title="IDA2"><br>Previous：<br>展示你先前已反编译的文件选项</p>
+<h3 id="1-2"><a href="#1-2" class="headerlink" title="1.2"></a>1.2</h3><p>当你将一个文件托入窗口，会显示如下对话框<br><img src="/images/IDA3.jpg" alt="图片" title="IDA3"><br>Load file：<br>文件路径，下面为文件类型选择，ida会自行判断。如果IDA不能识别的二进制代码，可选择“Binary file”方式加载。此时下方的Loading segment 和 Loading offset 就可以进行编辑。你可以手动填入加载段地址和相对偏移，此时ida不会自动分析代码，意味着用户可根据具体需求自行反汇编二进制代码<br>Processor Type：<br>可以指定在反汇编过程中使用的处理器模块。大多数情况下，ida会从可执行文件的头中读取到信息，会自行选择合适的处理器<br>kernel options：<br>配置特定反汇编分析选项，通常ida默认就是最优选项<br>processor options：选择适用于处理器模块的配置选项</p>
+<h3 id="1-3"><a href="#1-3" class="headerlink" title="1.3"></a>1.3</h3><p>一路点击ok可进入如下页面<br><img src="/images/IDA4.jpg" alt="图片" title="IDA4"></p>
 <h5 id="数据视图："><a href="#数据视图：" class="headerlink" title="数据视图："></a>数据视图：</h5><p>反汇编窗口 IDA View-A：<br>最开始为 IDA View-A 反汇编窗口，该窗口有两种模式：文本模式和图形模式<br>使用快捷键“Tab”可将窗口从 IDA View-A 切换到 Pseudocode-A （伪代码），便于分析代码和算法。</p>
 <p>二进制数据查看器 Hex View-1：<br>默认每行显示 16 个字节 的十六进制值（如 <code>48 65 6C 6C 6F</code>） 对应的 ASCII字符（不可打印字符显示为 .</p>
 <p>结构窗口 Structures：<br>结构窗口提供用户查询已定义的结构体，同时IDA可识别出可执行文件包含的部分结构体数据，结构窗口可通过快捷键“+”、“-”展开和收缩结构体，IDA结构窗口支持用户自定义结构体。</p>
@@ -290,7 +290,7 @@ SELECT * FROM users WHERE username=&#39;admin&#39; AND IF(SLEEP(5),1,0)`
 <p>黑色：表示间隙部分内容，可执行文件中包含多个节段，相邻节段之间存在空隙，红色表示空隙部分。</p>
 <p>银白色：表示数据项部分内容，可执行文件中会包含大量数据，银白色表示数据项部分内容。</p>
 <p>粉色：表示外部导入符号，通常可执行文件会导入外部的库函数。</p>
-<p>暗黄色：表示IDA未识别的内容，需要用户根据需求自行分析。<br>可在“Options”下的“Colors”更改颜色<br><img src="/Pasted%20image%2020260511203145-1.png" alt="alt"><br>注：<br>“Options”下的“Colors”是专门用来自定义颜色的，ida所有需要用到颜色地方都可在这里更改</p>
+<p>暗黄色：表示IDA未识别的内容，需要用户根据需求自行分析。<br>可在“Options”下的“Colors”更改颜色<br><img src="/images/IDA5.jpg" alt="图片" title="IDA5"><br>注：<br>“Options”下的“Colors”是专门用来自定义颜色的，ida所有需要用到颜色地方都可在这里更改</p>
 <h3 id="1-4"><a href="#1-4" class="headerlink" title="1.4"></a>1.4</h3><p>一些快捷键</p>
 <p>空格键：反汇编窗口切换文本跟图形</p>
 <p>Ctrl + F：关键词搜索(常用在函数窗口搜索主函数main)</p>
